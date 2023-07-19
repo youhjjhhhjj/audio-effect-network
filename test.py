@@ -36,17 +36,22 @@ torchaudio.save('train.wav', train_data, downsample_rate)
 # load test data
 test_data = load_wav(r"C:\Users\Allen\Desktop\audio-conversion-network\tmpvt4eexsy.wav")
 torchaudio.save('test.wav', test_data, downsample_rate)
+# test_data = torchaudio.transforms.PitchShift(downsample_rate, 4)(train_data)
 
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
         self.fc1 = nn.Linear(model_width, model_width // _hidden_ratio)
-        self.fc2 = nn.Linear(model_width // _hidden_ratio, model_width)
+        self.fc2 = nn.Linear(model_width // _hidden_ratio, model_width // _hidden_ratio)
+        self.fc3 = nn.Linear(model_width // _hidden_ratio, model_width // _hidden_ratio)
+        self.fc4 = nn.Linear(model_width // _hidden_ratio, model_width)
         
     def forward(self, x):
-        x = self.fc1(x)
-        x = self.fc2(x)
-        return x
+        x0 = self.fc1(x)
+        x0 = self.fc2(x0)
+        x0 = self.fc3(x0)
+        x0 = self.fc4(x0)
+        return x + x0
 
 net = Net()
 print(net)
@@ -70,6 +75,7 @@ def train(model, train_data, test_data, epochs, learning_rate=0.001):
         optimizer.step()
 
 train(net, train_data, test_data, 10)
+# train(net, train_data[:, :model_width], test_data[:, :model_width], 10)
 
 # prediction = net(train_data).detach()
 prediction = net(train_data[:, 0 : model_width]).detach()
