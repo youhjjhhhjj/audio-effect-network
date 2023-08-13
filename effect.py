@@ -4,39 +4,15 @@ import torch.nn.functional as F
 import torchaudio
 
 import matplotlib.pyplot as plt
-import os
+import sys
 
 from random import randint
-
-os.chdir(r"C:\Users\Allen\Desktop\audio-conversion-network")
-
-_sample_rate = 44100
-_downsample_ratio = 8
-_hidden_ratio = 2
-_network_dim_s = 1  # number of seconds
-
-
-downsample_rate = _sample_rate // _downsample_ratio
-model_width = int(_network_dim_s * downsample_rate)
-
-downsampler = torchaudio.transforms.Resample(
-    _sample_rate, downsample_rate, resampling_method='sinc_interpolation')
 
 def load_wav(path):
     data_waveform, sample_rate = torchaudio.load(path, format="wav")
     assert sample_rate == _sample_rate  # rate matches
     assert data_waveform.size()[0] == 1  # mono
     return downsampler(data_waveform)
-
-# load train data
-train_data = load_wav(r"C:\Users\Allen\Downloads\Swain_Original_Taunt_2.ogg")
-torchaudio.save('train.wav', train_data, downsample_rate)
-
-# load test data
-test_data = load_wav(r"C:\Users\Allen\Desktop\audio-conversion-network\tmpvt4eexsy.wav")
-torchaudio.save('test.wav', test_data, downsample_rate)
-# test_data = torchaudio.transforms.PitchShift(downsample_rate, 4)(train_data).detach()
-# torchaudio.save('test.wav', test_data, downsample_rate)
 
 class Net(nn.Module):
     def __init__(self, model_width, hidden_ratio):
@@ -100,22 +76,30 @@ def get_data_scale(data):
     shift = -1 - (data_min * scale)
     return scale, shift
 
-net = Net(model_width, _hidden_ratio)
-print(net)
-losses = train(net, train_data, test_data, 10)
-# losses = train(net, train_data[:, :model_width], test_data[:, :model_width], 10)
-plt.figure()
-plt.plot(losses)
-plt.savefig(r"C:\Users\Allen\Desktop\audio-conversion-network\losses.png")
+if __name__ == "__main__":    
+    epochs = int(sys.argv[3])
+    hidden_ratio = float(sys.argv[4])
+    network_dim_s = float(sys.argv[5])  # number of seconds
+    downsample_ratio = int(sys.argv[6])
 
-# prediction = net(train_data).detach()
-prediction = predict(net, train_data)
-torchaudio.save('prediction.wav', prediction, downsample_rate)
+    _sample_rate = 44100
 
-plt.figure()
-plt.plot(test_data.numpy())
-plt.plot(train_data.numpy())
-plt.savefig(r"C:\Users\Allen\Desktop\audio-conversion-network\train_test_waveform.png")
-plt.figure()
-plt.plot(prediction.numpy())
-plt.savefig(r"C:\Users\Allen\Desktop\audio-conversion-network\prediction_waveform.png")
+    downsample_rate = _sample_rate // downsample_ratio
+    model_width = int(network_dim_s * downsample_rate)
+
+    downsampler = torchaudio.transforms.Resample(
+        _sample_rate, downsample_rate, resampling_method='sinc_interpolation')
+
+    train_data = load_wav(sys.argv[1])
+    test_data = load_wav(sys.argv[2])    
+    
+    net = Net(model_width, hidden_ratio)
+    print(net)
+    losses = train(net, train_data, test_data, epochs)
+    # losses = train(net, train_data[:, :model_width], test_data[:, :model_width], 10)
+    plt.figure()
+    plt.plot(losses)
+    plt.savefig("losses.png")
+
+    prediction = predict(net, train_data)
+    torchaudio.save('prediction.wav', prediction, downsample_rate)
