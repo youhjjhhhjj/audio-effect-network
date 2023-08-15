@@ -1,5 +1,5 @@
+from models import Feedforward
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torchaudio
 
@@ -13,22 +13,6 @@ def load_wav(path):
     assert sample_rate == _sample_rate  # rate matches
     assert data_waveform.size()[0] == 1  # mono
     return downsampler(data_waveform)
-
-class Net(nn.Module):
-    def __init__(self, model_width, hidden_ratio):
-        super(Net, self).__init__()
-        hidden_dim = int(model_width // hidden_ratio)
-        self.fc1 = nn.Linear(model_width, hidden_dim)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc3 = nn.Linear(hidden_dim, hidden_dim)
-        self.fc4 = nn.Linear(hidden_dim, model_width)
-        
-    def forward(self, x):
-        x = self.fc1(x)
-        x = self.fc2(x)
-        x = self.fc3(x)
-        x = self.fc4(x)
-        return x
 
 def train(model, train_data, test_data, epochs, learning_rate=0.001):
     data_length = min(train_data.size()[1], test_data.size()[1])
@@ -93,7 +77,7 @@ if __name__ == "__main__":
     train_data = load_wav(sys.argv[1])
     test_data = load_wav(sys.argv[2])    
     
-    net = Net(model_width, hidden_ratio)
+    net = Feedforward(model_width, hidden_ratio)
     print(net)
     losses = train(net, train_data, test_data, epochs)
     # losses = train(net, train_data[:, :model_width], test_data[:, :model_width], 10)
