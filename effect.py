@@ -6,6 +6,7 @@ import torchaudio
 import matplotlib.pyplot as plt
 import sys
 import argparse
+from pathlib import Path
 
 from random import randint
 
@@ -70,6 +71,7 @@ if __name__ == "__main__":
     parser.add_argument("-network_dim", "-nd", help="How many seconds of audio for the network to process at once", type=float, default=1)
     parser.add_argument("-downsample_ratio", "-dr", help="Factor by which to downsample inputs for faster running", type=float, default=4)
     parser.add_argument("-sample_rate", "-sr", "-hz", help="Frequency of input audio", type=int, default=44100)
+    parser.add_argument("-save_model", "-sm", help="Filename if the model is to be saved", type=str, default="")
 
     args=parser.parse_args()
     epochs = args.epochs
@@ -77,6 +79,7 @@ if __name__ == "__main__":
     network_dim = args.network_dim
     downsample_ratio = args.downsample_ratio
     sample_rate = args.sample_rate
+    save_model_name = args.save_model
 
     downsample_rate = int(sample_rate / downsample_ratio)
     model_width = int(network_dim * downsample_rate)
@@ -90,6 +93,8 @@ if __name__ == "__main__":
     net = Feedforward(model_width, hidden_ratio)
     print(net)
     losses = train(net, input_data, target_data, epochs)
+    if save_model_name != "":
+        torch.save(net.state_dict(), Path().absolute() / "weights" / (save_model_name + ".pth"))
     plt.figure()
     plt.plot(losses)
     plt.savefig("losses.png")
