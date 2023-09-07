@@ -74,6 +74,7 @@ if __name__ == "__main__":
     parser.add_argument("-downsample_ratio", "-dr", help="Factor by which to downsample inputs for faster running", type=float, default=4)
     parser.add_argument("-sample_rate", "-sr", "-hz", help="Frequency of input audio", type=int, default=44100)
     parser.add_argument("-save_model", "-sm", help="Filename if the model is to be saved", type=str, default="")
+    parser.add_argument("-load_model", "-lm", help="Filename if the model is to be loaded (warm start)", type=str, default="")
 
     args=parser.parse_args()
     epochs = args.epochs
@@ -83,6 +84,7 @@ if __name__ == "__main__":
     downsample_ratio = args.downsample_ratio
     sample_rate = args.sample_rate
     save_model_name = args.save_model
+    load_model_name = args.load_model
     input_dir = Path(sys.argv[1]).resolve()
     target_dir = Path(sys.argv[2]).resolve()
 
@@ -101,11 +103,16 @@ if __name__ == "__main__":
         target_dataset.append(torch.stft(target_waveform, n_fft, return_complex=True).abs())
     
     net = Feedforward(model_dim, hidden_ratio)
+    if load_model_name != "":
+        params = torch.load((Path().resolve() / "weights" / load_model_name).with_suffix(".pt"))
+        net.load_state_dict(params)
+        print("Successfully loaded " + load_model_name + ".pt")
     print(net)
     print(sum(p.numel() for p in net.parameters()))
     losses = train(net, input_dataset, target_dataset, epochs, batch_size)
     if save_model_name != "":
-        torch.save(net.state_dict(), Path().absolute() / "weights" / (save_model_name + ".pth"))
+        torch.save(net.state_dict(), (Path().resolve() / "weights" / save_model_name).with_suffix(".pt"))
+        print("Successfully saved " + save_model_name + ".pt")
     plt.figure()
     plt.plot(losses)
     plt.savefig("losses.png")
