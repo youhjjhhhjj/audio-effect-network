@@ -43,7 +43,7 @@ def train(model, input_dataset, target_dataset, epochs, batch_size=8, learning_r
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("files",nargs=2)
+    parser.add_argument("directories", nargs=2)
     parser.add_argument("-epochs", help="Number of training epochs", type=int, default=5)
     parser.add_argument("-batch_size", "-bs", help="Size of training batch", type=int, default=8)
     parser.add_argument("-hidden_ratio", "-hr", help="Ratio of hidden dimension to input dimension", type=float, default=1.0)
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     input_dataset = []
     target_dataset = []
 
-    for input_file, target_file in zip(sorted(os.listdir(sys.argv[1])), sorted(os.listdir(sys.argv[2]))):
+    for input_file, target_file in zip(sorted(os.listdir(input_dir)), sorted(os.listdir(target_dir))):
         input_waveform = load_wav(input_dir/input_file, downsample_rate)
         target_waveform = load_wav(target_dir/target_file, downsample_rate)
         input_dataset.append(torch.stft(input_waveform, n_fft, return_complex=True).abs())
