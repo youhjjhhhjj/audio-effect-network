@@ -8,9 +8,11 @@ import torchaudio
 import sys
 import argparse
 from pathlib import Path
+from typing import List
 
 
-def predict(model, data):
+def predict(model: torch.nn.Module, data: torch.Tensor) -> torch.Tensor:
+    """Generate one prediction."""
     predictions = []
     for i in range(data.shape[1]):
         with torch.no_grad():
@@ -50,5 +52,3 @@ if __name__ == "__main__":
         prediction_waveform = torch.istft(torch.polar(prediction, input_data.angle().squeeze(dim=0)), n_fft, return_complex=False)
         torchaudio.save(output_dir / Path(f).with_suffix(".wav").name, prediction_waveform.unsqueeze(0), downsample_rate)
         print("Successfully processed " + f.name)
-
-

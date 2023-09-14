@@ -4,9 +4,10 @@ import torchaudio
 
 import os
 from pathlib import Path
+from typing import Iterator, Tuple
 
 
-def load_wav(path: Path, resample_rate: int):
+def load_wav(path: Path, resample_rate: int) -> torch.Tensor:
     """Load audio file and downsample it."""
     waveform, sr = torchaudio.load(path, format="wav")
     if waveform.shape[0] != 1:
@@ -16,7 +17,7 @@ def load_wav(path: Path, resample_rate: int):
         return torchaudio.functional.resample(waveform[0], orig_freq=sr, new_freq=resample_rate)
     return waveform[0]
 
-def get_data_scale(data: torch.Tensor):
+def get_data_scale(data: torch.Tensor) -> Tuple[float, float]:
     """Return a scale and shift such that scale * data + shift results in a range between -1 and 1."""
     data_min = data.min()
     data_max = data.max()
@@ -24,7 +25,7 @@ def get_data_scale(data: torch.Tensor):
     shift = -1 - (data_min * scale)
     return scale, shift
 
-def list_files(path: Path):
+def list_files(path: Path) -> Iterator[Path]:
     """Generator for file paths in the directory."""
     for f in os.listdir(path.resolve()):
         if os.path.isfile(path/f):

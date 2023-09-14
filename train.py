@@ -11,20 +11,22 @@ import os
 import argparse
 from pathlib import Path
 from random import randrange
+from typing import List
 
 
 loss_function = torch.nn.CosineSimilarity(dim=1)
 
-def train(model, input_dataset, target_dataset, epochs, batch_size=8, learning_rate=0.0001):
-    dataset_length = len(input_dataset)
+def train(model: torch.nn.Module, input_dataset: List[torch.Tensor], target_dataset: List[torch.Tensor], epochs: int, batch_size: int = 8, learning_rate: float = 0.0001) -> List[float]:
+    """Train the model with Adam optimization."""
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     losses = []
+    # training loop
     for i in range(epochs):
         input_batch = []
         target_batch = []
         for j in range(batch_size):
-            input_data = input_dataset[j % dataset_length]
-            target_data = target_dataset[j % dataset_length]
+            input_data = input_dataset[j % len(input_dataset)]
+            target_data = target_dataset[j % len(input_dataset)]
             # create training sequence
             data_length = min(input_data.shape[1], target_data.shape[1])
             index = randrange(0, data_length)
