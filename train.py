@@ -1,5 +1,5 @@
 
-from models import Feedforward
+from models import *
 from utils import load_wav
 
 import torch
